@@ -1,0 +1,133 @@
+1995-04-07 open Assets:Cash USD
+
+2020-01-03 open Assets:Investments:IBKR:USD USD
+2020-01-03 open Expenses:IBKR:Commissions USD
+
+2020-01-03 open Assets:Investments:IBKR:VTI VTI
+2020-01-03 open Income:Investments:IBKR:VTI:DIVIDEND USD
+
+2020-01-03 open Assets:Investments:IBKR:VXUS VXUS
+2020-01-03 open Income:Investments:IBKR:VXUS:DIVIDEND USD
+
+2020-01-03 open Assets:Investments:IBKR:BND BND
+2020-01-03 open Income:Investments:IBKR:BND:DIVIDEND USD
+
+2020-01-08 * "Electronic Fund Transfer"
+  Assets:Investments:IBKR:USD 11978.00 USD
+  Expenses:IBKR:Commissions 12.00 USD
+  Assets:Cash -11990.00 USD
+
+2020-01-08 * "BND Purchase"
+  Assets:Investments:IBKR:BND 28 BND @ 84.175 USD
+  Expenses:IBKR:Commissions 1 USD
+  Assets:Investments:IBKR:USD -2357.9 USD
+
+2020-01-08 * "VTI Purchase"
+  Assets:Investments:IBKR:VTI 47 VTI @ 164.25 USD
+  Expenses:IBKR:Commissions 1 USD
+  Assets:Investments:IBKR:USD -7720.75 USD
+
+2020-01-08 * "VXUS Purchase"
+  Assets:Investments:IBKR:VXUS 34 VXUS @ 55.61 USD
+  Expenses:IBKR:Commissions 1 USD
+  Assets:Investments:IBKR:USD -1891.74 USD
+
+2020-08-19 * "VXUS Purchase"
+  Assets:Investments:IBKR:VXUS 1 VXUS @ 53.7 USD
+  Expenses:IBKR:Commissions 0.5385 USD
+  Assets:Investments:IBKR:USD -54.2385 USD
+
+2020-06-03 * "Monthly Minimum Fee"
+  Expenses:IBKR:Commissions 3.00 USD
+  Assets:Investments:IBKR:USD -3.00 USD
+
+2020-07-02 * "Monthly Minimum Fee"
+  Expenses:IBKR:Commissions 3.00 USD
+  Assets:Investments:IBKR:USD -3.00 USD
+
+2020-08-05 * "Monthly Minimum Fee"
+  Expenses:IBKR:Commissions 3.00 USD
+  Assets:Investments:IBKR:USD -3.00 USD
+
+2020-09-03 * "Monthly Minimum Fee"
+  Expenses:IBKR:Commissions 2.46 USD
+  Assets:Investments:IBKR:USD -2.46 USD
+
+2020-10-05 * "Monthly Minimum Fee"
+  Expenses:IBKR:Commissions 3.00 USD
+  Assets:Investments:IBKR:USD -3.00 USD
+
+2020-02-06 * "BND Dividend"
+  Assets:Investments:IBKR:USD 4.34 USD
+  Expenses:IBKR:Commissions 0.77 USD
+  Income:Investments:IBKR:BND:DIVIDEND -5.11 USD
+
+2020-03-05 * "BND Dividend"
+  Assets:Investments:IBKR:USD 4.11 USD
+  Expenses:IBKR:Commissions 0.73 USD
+  Income:Investments:IBKR:BND:DIVIDEND -4.84 USD
+
+2020-03-26 * "VXUS Dividend"
+  Assets:Investments:IBKR:USD 3.06 USD
+  Expenses:IBKR:Commissions 0.53 USD
+  Income:Investments:IBKR:VXUS:DIVIDEND -3.59 USD
+
+2020-03-31 * "VTI Dividend"
+  Assets:Investments:IBKR:USD 24.52 USD
+  Expenses:IBKR:Commissions 4.32 USD
+  Income:Investments:IBKR:VTI:DIVIDEND -28.84 USD
+
+2020-04-06 * "BND Dividend"
+  Assets:Investments:IBKR:USD 4.53 USD
+  Expenses:IBKR:Commissions 0.8 USD
+  Income:Investments:IBKR:BND:DIVIDEND -5.33 USD
+
+2020-05-06 * "BND Dividend"
+  Assets:Investments:IBKR:USD 4.14 USD
+  Expenses:IBKR:Commissions 0.73 USD
+  Income:Investments:IBKR:BND:DIVIDEND -4.87 USD
+
+2020-06-04 * "BND Dividend"
+  Assets:Investments:IBKR:USD 4.01 USD
+  Expenses:IBKR:Commissions 0.71 USD
+  Income:Investments:IBKR:BND:DIVIDEND -4.72 USD
+
+2020-06-25 * "VXUS Dividend"
+  Assets:Investments:IBKR:USD 7.28 USD
+  Expenses:IBKR:Commissions 1.29 USD
+  Income:Investments:IBKR:VXUS:DIVIDEND -8.57 USD
+
+2020-06-30 * "VTI Dividend"
+  Assets:Investments:IBKR:USD 27.96 USD
+  Expenses:IBKR:Commissions 4.94 USD
+  Income:Investments:IBKR:VTI:DIVIDEND -32.9 USD
+
+2020-07-07 * "BND Dividend"
+  Assets:Investments:IBKR:USD 3.87 USD
+  Expenses:IBKR:Commissions 0.68 USD
+  Income:Investments:IBKR:BND:DIVIDEND -4.55 USD
+
+2020-08-06 * "BND Dividend"
+  Assets:Investments:IBKR:USD 3.77 USD
+  Expenses:IBKR:Commissions 0.67 USD
+  Income:Investments:IBKR:BND:DIVIDEND -4.44 USD
+
+2020-09-04 * "BND Dividend"
+  Assets:Investments:IBKR:USD 3.65 USD
+  Expenses:IBKR:Commissions 0.64 USD
+  Income:Investments:IBKR:BND:DIVIDEND -4.29 USD
+
+2020-09-24 * "VXUS Dividend"
+  Assets:Investments:IBKR:USD 10.08 USD
+  Expenses:IBKR:Commissions 1.77 USD
+  Income:Investments:IBKR:VXUS:DIVIDEND -11.85 USD
+
+2020-09-30 * "VTI Dividend"
+  Assets:Investments:IBKR:USD 26.93 USD
+  Expenses:IBKR:Commissions 4.75 USD
+  Income:Investments:IBKR:VTI:DIVIDEND -31.68 USD
+
+2020-09-30 * "BND Dividend"
+  Assets:Investments:IBKR:USD 3.58 USD
+  Expenses:IBKR:Commissions 0.63 USD
+  Income:Investments:IBKR:BND:DIVIDEND -4.21 USD
