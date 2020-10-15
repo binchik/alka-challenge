@@ -92,10 +92,12 @@ const App: React.FC = () => {
             upToEnd.year >= transaction.date.year)
       )
       .map(transaction => transaction.comissionPosting.units.number);
+
     const commissionsTotal = R.sum(comissionAmounts);
 
     const stockBeginningTotal = R.sum(stockTotals.map(stockTotal => stockTotal.beginning.total));
     const stockEndTotal = R.sum(stockTotals.map(stockTotal => stockTotal.end.total));
+
     const stockTotalReturn = (stockEndTotal - stockBeginningTotal - commissionsTotal) / stockBeginningTotal * 100;
 
     const stockBeginningTotalExDividends = R.sum(stockTotals.map(stockTotal => stockTotal.beginning.totalExDividends));

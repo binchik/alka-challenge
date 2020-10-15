@@ -122,6 +122,14 @@ const BeancountParser = {
           const comissionPosting = transactionEntry.postings.find(
             posting => BeancountParser.isComissionAccountName(posting.account)
           );
+          const cashPosting = transactionEntry.postings.find(
+            posting =>
+              !BeancountParser.isDividendAccountName(posting.account) &&
+              !BeancountParser.isComissionAccountName(posting.account)
+          );
+          const dividendPosting = transactionEntry.postings.find(
+            posting => BeancountParser.isDividendAccountName(posting.account)
+          );
   
           if (!comissionPosting) {
             return undefined as never;
@@ -130,6 +138,8 @@ const BeancountParser = {
           return {
             date: BeancountParser.parseEntryDate(transactionEntry),
             comissionPosting,
+            cashPosting,
+            dividendPosting,
           };
         }),
   getSymbolTotal: (
@@ -166,7 +176,7 @@ const BeancountParser = {
       );
     const dividendTotal = config.onlyDividends || config.includeDividends
       ? R.sum(
-          dividendTransactions.map(transaction => -transaction.dividendPosting.units.number)
+          dividendTransactions.map(transaction => transaction.cashPosting.units.number)
         )
       : 0;
 

@@ -53,30 +53,28 @@ const InvestementsChart: React.FC<InvestementsChartProps> = ({
           return null;
         }
 
-        const price = R.sum(
+        const priceWithoutNonDividendCommissions = R.sum(
           stockSymbols.map(
-            symbol => {
-              const totalWithoutCommissions = BeancountParser.getSymbolTotal(beancount, historicalData, {
+            symbol =>
+              BeancountParser.getSymbolTotal(beancount, historicalData, {
                 symbol,
                 onlyDividends,
                 includeDividends,
                 onlyReturns,
                 upTo: {month: monthIdx, year: 2020}
-              })
-
-              const monthCommissionTransactions = comissionTransactions.filter(
-                transaction => monthIdx >= transaction.date.month,
-              );
-              const comissionTotal = onlyDividends
-                ? 0
-                : R.sum(
-                    monthCommissionTransactions.map(transaction => transaction.comissionPosting.units.number)
-                  );
-
-              return totalWithoutCommissions - comissionTotal;
-            },
+              }),
           )
         );
+
+        const nonDividendCommissionAmounts = comissionTransactions
+          .filter(transaction => monthIdx >= transaction.date.month)
+          .filter(transaction => !transaction.dividendPosting)
+          .map(transaction => transaction.comissionPosting.units.number);
+        const nonDividendCommissionTotal = onlyDividends
+          ? 0
+          : R.sum(nonDividendCommissionAmounts);
+
+        const price = priceWithoutNonDividendCommissions - nonDividendCommissionTotal;
 
         return {
           Month: month,
