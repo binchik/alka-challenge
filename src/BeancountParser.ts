@@ -149,7 +149,8 @@ const BeancountParser = {
       .filter(transaction =>
         config.upTo.month >= transaction.date.month &&
         config.upTo.year >= transaction.date.year,
-      )
+      );
+
     const stockQuantity = config.onlyDividends
       ? 0
       : R.sum(
