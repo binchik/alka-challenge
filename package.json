@@ -10,11 +10,15 @@
     "@types/node": "^12.0.0",
     "@types/react": "^16.9.0",
     "@types/react-dom": "^16.9.0",
+    "ramda": "^0.27.1",
     "raw.macro": "^0.4.2",
     "react": "^16.13.1",
     "react-dom": "^16.13.1",
     "react-scripts": "3.4.3",
-    "typescript": "~3.7.2"
+    "react-vega": "^7.4.1",
+    "typescript": "^3.8.0",
+    "vega": "^5.17.0",
+    "vega-lite": "^4.17.0"
   },
   "scripts": {
     "start": "react-scripts start",
@@ -36,5 +40,8 @@
       "last 1 firefox version",
       "last 1 safari version"
     ]
+  },
+  "devDependencies": {
+    "@types/ramda": "^0.27.27"
   }
 }
