@@ -8,13 +8,6 @@ import BeancountParser from './BeancountParser';
 
 const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
 
-interface InvestementsChartProps {
-  beancount: Beancount;
-  historicalData: readonly HistoricalData[];
-  includeDividends?: boolean;
-  onlyDividends?: boolean;
-}
-
 const vegaSpec: VisualizationSpec = {
   width: 400,
   height: 200,
@@ -26,11 +19,20 @@ const vegaSpec: VisualizationSpec = {
   data: { name: 'table' },
 };
 
+interface InvestementsChartProps {
+  beancount: Beancount;
+  historicalData: readonly HistoricalData[];
+  includeDividends?: boolean;
+  onlyDividends?: boolean;
+  onlyReturns?: boolean;
+}
+
 const InvestementsChart: React.FC<InvestementsChartProps> = ({
   beancount,
   historicalData,
   includeDividends = false,
   onlyDividends = false,
+  onlyReturns = false,
 }) => {
   const data = React.useMemo(() => {
     if (historicalData.length === 0) {
@@ -70,6 +72,10 @@ const InvestementsChart: React.FC<InvestementsChartProps> = ({
         }
 
         const monthHistoricalDataByStock = R.groupBy(R.prop('symbol'), monthHistoricalEntries);
+        const earliestMonthDataByStock = R.mapObjIndexed(
+          stockData => R.head(R.sortBy(R.prop('date'), stockData)),
+          monthHistoricalDataByStock,
+        );
         const latestMonthDataByStock = R.mapObjIndexed(
           stockData => R.last(R.sortBy(R.prop('date'), stockData)),
           monthHistoricalDataByStock,
@@ -85,9 +91,13 @@ const InvestementsChart: React.FC<InvestementsChartProps> = ({
           transaction => monthIdx >= transaction.date.month,
         );
 
-        console.log('monthAllCommissionTransactions: ', monthAllCommissionTransactions);
-
         const stockSymbols = Object.keys(latestMonthDataByStock);
+
+        const comissionTotal = onlyDividends
+          ? 0
+          : R.sum(
+              monthAllCommissionTransactions.map(transaction => transaction.comissionPosting.units.number)
+            );
 
         const price = R.sum(
           stockSymbols.map(stockSymbol => {
@@ -108,15 +118,11 @@ const InvestementsChart: React.FC<InvestementsChartProps> = ({
                   dividedndTransactions.map(transaction => transaction.cashPosting.units.number)
                 )
               : 0;
-            const comissionTotal = onlyDividends
-              ? 0
-              : R.sum(
-                  monthAllCommissionTransactions.map(transaction => transaction.comissionPosting.units.number)
-                );
 
+            const stockOpenPrice = earliestMonthDataByStock[stockSymbol]?.open || 0;
             const stockClosePrice = latestMonthDataByStock[stockSymbol]?.close || 0;
 
-            return stockQuantity * stockClosePrice + dividendTotal - comissionTotal;
+            return stockQuantity * (stockClosePrice - (onlyReturns ? stockOpenPrice : 0)) + dividendTotal - comissionTotal;
           })
         );
 
@@ -128,7 +134,7 @@ const InvestementsChart: React.FC<InvestementsChartProps> = ({
     .filter(Boolean)
 
     return {table};
-  }, [beancount, historicalData, includeDividends, onlyDividends]);
+  }, [beancount, historicalData, includeDividends, onlyDividends, onlyReturns]);
 
   return <VegaLite spec={vegaSpec} data={data} />;
 };

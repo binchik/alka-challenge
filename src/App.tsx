@@ -14,6 +14,7 @@ const App: React.FC = () => {
   const [historicalData, setHistoricalData] = React.useState<readonly HistoricalData[] | null>(null);
   const [includeDividends, setIncludeDividends] = React.useState(false);
   const [onlyDividends, setOnlyDividends] = React.useState(false);
+  const [onlyReturns, setOnlyReturns] = React.useState(false);
 
   React.useEffect(() => {
     const setUpDependencies = async () => {
@@ -43,6 +44,12 @@ const App: React.FC = () => {
   ) => {
     setOnlyDividends(event.target.checked);
   }
+
+  const handleChangeOnlyReturns: React.ChangeEventHandler<HTMLInputElement> = (
+    event
+  ) => {
+    setOnlyReturns(event.target.checked);
+  }
   
   return (
     <div className="App">
@@ -67,6 +74,15 @@ const App: React.FC = () => {
             onChange={handleChangeOnlyDividends}
           />
         </label>
+        <label>
+          Returns Per Month
+          <input
+            name="onlyReturns"
+            type="checkbox"
+            checked={onlyReturns}
+            onChange={handleChangeOnlyReturns}
+          />
+        </label>
       </header>
       {beancount && (
         <InvestementsChart
@@ -74,6 +90,7 @@ const App: React.FC = () => {
           historicalData={historicalData || []}
           includeDividends={includeDividends}
           onlyDividends={onlyDividends}
+          onlyReturns={onlyReturns}
         />
       )}
     </div>
