@@ -57,6 +57,7 @@ const InvestementsChart: React.FC<InvestementsChartProps> = ({
 
     const allStockTransactions = BeancountParser.getStockTransactions(beancount);
     const allDividendTransactions = BeancountParser.getDividendTransactions(beancount);
+    const allComissionTransactions = BeancountParser.getCommissionTransactions(beancount);
 
     const table = MONTHS
       .map((month, idx) => {
@@ -80,6 +81,11 @@ const InvestementsChart: React.FC<InvestementsChartProps> = ({
         const monthAllDividendTransactions = allDividendTransactions.filter(
           transaction => monthIdx >= transaction.date.month,
         );
+        const monthAllCommissionTransactions = allComissionTransactions.filter(
+          transaction => monthIdx >= transaction.date.month,
+        );
+
+        console.log('monthAllCommissionTransactions: ', monthAllCommissionTransactions);
 
         const stockSymbols = Object.keys(latestMonthDataByStock);
 
@@ -99,13 +105,18 @@ const InvestementsChart: React.FC<InvestementsChartProps> = ({
                 );
             const dividendTotal = onlyDividends || includeDividends
               ? R.sum(
-                  dividedndTransactions.map(transactions => transactions.cashPosting.units.number)
+                  dividedndTransactions.map(transaction => transaction.cashPosting.units.number)
                 )
               : 0;
+            const comissionTotal = onlyDividends
+              ? 0
+              : R.sum(
+                  monthAllCommissionTransactions.map(transaction => transaction.comissionPosting.units.number)
+                );
 
             const stockClosePrice = latestMonthDataByStock[stockSymbol]?.close || 0;
 
-            return stockQuantity * stockClosePrice + dividendTotal;
+            return stockQuantity * stockClosePrice + dividendTotal - comissionTotal;
           })
         );
 
