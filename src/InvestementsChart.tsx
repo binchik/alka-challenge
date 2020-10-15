@@ -43,9 +43,15 @@ const InvestementsChart: React.FC<InvestementsChartProps> = ({
 
     const comissionTransactions = BeancountParser.getCommissionTransactions(beancount);
 
+    const currentMonth = new Date().getMonth() + 1;
+
     const table = MONTHS
       .map((month, idx) => {
         const monthIdx = idx + 1;
+
+        if (monthIdx > currentMonth) {
+          return null;
+        }
 
         const price = R.sum(
           stockSymbols.map(
