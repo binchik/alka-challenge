@@ -148,32 +148,26 @@ const BeancountParser = {
       onlyReturns?: boolean;
     },
   ) => {
-    const stockTransactions = BeancountParser
+    const stockQuantities = BeancountParser
       .getStockTransactions(beancount)
       .filter(transaction => config.symbol === transaction.symbol)
       .filter(transaction =>
         config.upTo.month >= transaction.date.month &&
         config.upTo.year >= transaction.date.year,
-      );
+      )
+      .map(transaction => transaction.stockPosting.units.number);
+    const stockQuantity = config.onlyDividends ? 0 : R.sum(stockQuantities);
 
-    const stockQuantity = config.onlyDividends
-      ? 0
-      : R.sum(
-          stockTransactions.map(transaction => transaction.stockPosting.units.number)
-        );
-
-    const dividendTransactions = BeancountParser
+    const dividendAmounts = BeancountParser
       .getDividendTransactions(beancount)
       .filter(transaction => config.symbol === transaction.symbol)
       .filter(transaction =>
         config.upTo.month >= transaction.date.month &&
         config.upTo.year >= transaction.date.year,
-      );
+      )
+      .map(transaction => transaction.cashPosting.units.number);
     const dividendTotal = config.onlyDividends || config.includeDividends
-      ? R.sum(
-          dividendTransactions.map(transaction => transaction.cashPosting.units.number)
-        )
-      : 0;
+      ? R.sum(dividendAmounts) : 0;
 
     const historicalEntries = historicalData
       .filter(historicalDatum => historicalDatum.symbol === config.symbol)
