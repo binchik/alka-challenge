@@ -55,65 +55,51 @@ const App: React.FC = () => {
       year: date.getFullYear(),
     }));
 
-    const stockTotals = STOCK_SYMBOLS.flatMap(symbol => {
-      const [beginning, end] = upTos.map((upTo, idx) => ({
-        total: BeancountParser.getSymbolTotal(beancount, historicalData, {
-          symbol,
-          upTo,
-          includeDividends: true,
-          useOpenStockPrice: idx === 0,
+    const symbolTotals = STOCK_SYMBOLS.flatMap(symbol => {
+      const [beginningStockTotal, endStockTotal] = upTos.map(
+        (upTo, idx) => ({
+          stock: BeancountParser.getStockTotal(beancount, historicalData, {
+            symbol,
+            upTo,
+            useOpenPrice: idx === 0,
+          }),
+          dividend: BeancountParser.getDividendTotal(beancount, {
+            symbol,
+            upTo,
+          }),
         }),
-        totalExDividends: BeancountParser.getSymbolTotal(beancount, historicalData, {
-          symbol,
-          upTo,
-          includeDividends: false,
-          useOpenStockPrice: idx === 0,
-        }),
-        totalDividends: BeancountParser.getSymbolTotal(beancount, historicalData, {
-          symbol,
-          upTo,
-          onlyDividends: true,
-          useOpenStockPrice: idx === 0,
-        }),
-      }));
+      );
 
       return {
         symbol,
-        beginning,
-        end,
+        beginning: beginningStockTotal,
+        end: endStockTotal,
       }
     });
 
-    const [upToBeginning, upToEnd] = upTos;
-    const comissionAmounts = BeancountParser
-      .getCommissionTransactions(beancount)
-      .filter(transaction => !transaction.dividendPosting)
-      .filter(
-        transaction =>
-          (upToBeginning.month <= transaction.date.month &&
-            upToBeginning.year <= transaction.date.year) ||
-          (upToEnd.month >= transaction.date.month &&
-            upToEnd.year >= transaction.date.year)
-      )
-      .map(transaction => transaction.comissionPosting.units.number);
+    const stockBeginningTotal = R.sum(symbolTotals.map(symbolTotal => symbolTotal.beginning.stock));
+    const stockEndTotal = R.sum(symbolTotals.map(symbolTotal => symbolTotal.end.stock));
+    const stockTotalReturn = (stockEndTotal - stockBeginningTotal) / stockBeginningTotal * 100;
 
-    const commissionsTotal = R.sum(comissionAmounts);
-
-    const stockBeginningTotal = R.sum(stockTotals.map(stockTotal => stockTotal.beginning.total));
-    const stockEndTotal = R.sum(stockTotals.map(stockTotal => stockTotal.end.total));
-    const stockTotalReturn = (stockEndTotal - stockBeginningTotal - commissionsTotal) / stockBeginningTotal * 100;
-
-    const stockBeginningTotalExDividends = R.sum(stockTotals.map(stockTotal => stockTotal.beginning.totalExDividends));
-    const stockEndTotalExDividends = R.sum(stockTotals.map(stockTotal => stockTotal.end.totalExDividends));
-    const stockTotalExDividendsReturn = (stockEndTotalExDividends - stockBeginningTotalExDividends - commissionsTotal) / stockBeginningTotalExDividends * 100;
-
-    const stockTotalDividendsOnlyReturn = stockTotalReturn - stockTotalExDividendsReturn;
+    const stockWithDividendBeginningTotal = R.sum(
+      symbolTotals.map(
+        symbolTotal => symbolTotal.beginning.stock + symbolTotal.beginning.dividend,
+      ),
+    );
+    const stockWithDividendEndTotal = R.sum(
+      symbolTotals.map(
+        symbolTotal => symbolTotal.end.stock + symbolTotal.end.dividend,
+      ),
+    );
+    const stockWithDividendTotalReturn =
+      (stockWithDividendEndTotal - stockWithDividendBeginningTotal) /
+      stockWithDividendBeginningTotal * 100;
 
     return {
-      stockTotals,
+      symbolTotals,
       stockTotalReturn,
-      stockTotalExDividendsReturn,
-      stockTotalDividendsOnlyReturn,
+      stockWithDividendTotalReturn,
+      dividendTotalReturn: stockWithDividendTotalReturn - stockTotalReturn,
     };
   }, [beancount, historicalData, startDate, endDate]);
 
@@ -217,17 +203,21 @@ const App: React.FC = () => {
                 </tr>
               </thead>
               <tbody>
-                {returns.stockTotals.map(ret => {
-                  const totalsDiff = ret.end.total - ret.beginning.total;
-                  const totalROI = totalsDiff / ret.beginning.total * 100;
+                {returns.symbolTotals.map(symbolTotal => {
+                  const stockTotalsWithDividend =
+                    symbolTotal.end.stock + symbolTotal.end.dividend -
+                    symbolTotal.beginning.stock + symbolTotal.beginning.dividend;
+                  const stockTotalsWithDividendROI =
+                    stockTotalsWithDividend /
+                    (symbolTotal.beginning.stock + symbolTotal.beginning.dividend) * 100;
 
                   return (
-                    <tr key={ret.symbol}>
-                      <td>{ret.symbol}</td>
-                      <td>%{totalROI.toFixed(2)}</td>
-                      <td>${totalsDiff.toFixed(2)}</td>
-                      <td>${(ret.end.totalExDividends - ret.beginning.totalExDividends).toFixed(2)}</td>
-                      <td>${(ret.end.totalDividends - ret.beginning.totalDividends).toFixed(2)}</td>
+                    <tr key={symbolTotal.symbol}>
+                      <td>{symbolTotal.symbol}</td>
+                      <td>%{stockTotalsWithDividendROI.toFixed(2)}</td>
+                      <td>${stockTotalsWithDividend.toFixed(2)}</td>
+                      <td>${(symbolTotal.end.stock - symbolTotal.beginning.stock).toFixed(2)}</td>
+                      <td>${(symbolTotal.end.dividend - symbolTotal.beginning.dividend).toFixed(2)}</td>
                     </tr>
                   );
                 })}
@@ -246,9 +236,9 @@ const App: React.FC = () => {
               </thead>
               <tbody>
                 <tr>
+                  <td>%{returns.stockWithDividendTotalReturn.toFixed(2)}</td>
                   <td>%{returns.stockTotalReturn.toFixed(2)}</td>
-                  <td>%{returns.stockTotalExDividendsReturn.toFixed(2)}</td>
-                  <td>%{returns.stockTotalDividendsOnlyReturn.toFixed(2)}</td>
+                  <td>%{returns.dividendTotalReturn.toFixed(2)}</td>
                 </tr>
               </tbody>
             </table>
