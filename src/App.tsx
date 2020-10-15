@@ -57,17 +57,17 @@ const App: React.FC = () => {
 
     const stockTotals = STOCK_SYMBOLS.flatMap(symbol => {
       const [beginning, end] = upTos.map(upTo => ({
-        total: BeancountParser.getTotalWithoutCommissions(beancount, historicalData, {
+        total: BeancountParser.getSymbolTotal(beancount, historicalData, {
           symbol,
           upTo,
           includeDividends: true,
         }),
-        totalExDividends: BeancountParser.getTotalWithoutCommissions(beancount, historicalData, {
+        totalExDividends: BeancountParser.getSymbolTotal(beancount, historicalData, {
           symbol,
           upTo,
           includeDividends: false,
         }),
-        totalDividends: BeancountParser.getTotalWithoutCommissions(beancount, historicalData, {
+        totalDividends: BeancountParser.getSymbolTotal(beancount, historicalData, {
           symbol,
           upTo,
           onlyDividends: true,
@@ -82,7 +82,7 @@ const App: React.FC = () => {
     });
 
     const [upToBeginning, upToEnd] = upTos;
-    const comissionTransactions = BeancountParser
+    const comissionAmounts = BeancountParser
       .getCommissionTransactions(beancount)
       .filter(
         transaction =>
@@ -90,18 +90,17 @@ const App: React.FC = () => {
             upToBeginning.year <= transaction.date.year) ||
           (upToEnd.month >= transaction.date.month &&
             upToEnd.year >= transaction.date.year)
-      );
-    const commissionsTotal = R.sum(
-      comissionTransactions.map(transaction => transaction.comissionPosting.units.number)
-    );
+      )
+      .map(transaction => transaction.comissionPosting.units.number);
+    const commissionsTotal = R.sum(comissionAmounts);
 
     const stockBeginningTotal = R.sum(stockTotals.map(stockTotal => stockTotal.beginning.total));
-    const stockEndTotal = R.sum(stockTotals.map(stockTotal => stockTotal.end.total)) - commissionsTotal;
-    const stockTotalReturn = (stockEndTotal - stockBeginningTotal) / stockBeginningTotal * 100;
+    const stockEndTotal = R.sum(stockTotals.map(stockTotal => stockTotal.end.total));
+    const stockTotalReturn = (stockEndTotal - stockBeginningTotal - commissionsTotal) / stockBeginningTotal * 100;
 
     const stockBeginningTotalExDividends = R.sum(stockTotals.map(stockTotal => stockTotal.beginning.totalExDividends));
-    const stockEndTotalExDividends = R.sum(stockTotals.map(stockTotal => stockTotal.end.totalExDividends)) - commissionsTotal;
-    const stockTotalExDividendsReturn = (stockEndTotalExDividends - stockBeginningTotalExDividends) / stockBeginningTotalExDividends * 100;
+    const stockEndTotalExDividends = R.sum(stockTotals.map(stockTotal => stockTotal.end.totalExDividends));
+    const stockTotalExDividendsReturn = (stockEndTotalExDividends - stockBeginningTotalExDividends - commissionsTotal) / stockBeginningTotalExDividends * 100;
 
     const stockTotalDividendsOnlyReturn = stockTotalReturn - stockTotalExDividendsReturn;
 

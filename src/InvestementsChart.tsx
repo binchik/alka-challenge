@@ -56,7 +56,7 @@ const InvestementsChart: React.FC<InvestementsChartProps> = ({
         const price = R.sum(
           stockSymbols.map(
             symbol => {
-              const totalWithoutCommissions = BeancountParser.getTotalWithoutCommissions(beancount, historicalData, {
+              const totalWithoutCommissions = BeancountParser.getSymbolTotal(beancount, historicalData, {
                 symbol,
                 onlyDividends,
                 includeDividends,

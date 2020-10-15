@@ -132,7 +132,7 @@ const BeancountParser = {
             comissionPosting,
           };
         }),
-  getTotalWithoutCommissions: (
+  getSymbolTotal: (
     beancount: Beancount,
     historicalData: readonly HistoricalData[],
     config: {
@@ -166,7 +166,7 @@ const BeancountParser = {
       );
     const dividendTotal = config.onlyDividends || config.includeDividends
       ? R.sum(
-          dividendTransactions.map(transaction => transaction.cashPosting.units.number)
+          dividendTransactions.map(transaction => -transaction.dividendPosting.units.number)
         )
       : 0;
 
