@@ -146,6 +146,7 @@ const BeancountParser = {
       includeDividends?: boolean;
       onlyDividends?: boolean;
       onlyReturns?: boolean;
+      useOpenStockPrice?: boolean;
     },
   ) => {
     const stockQuantities = BeancountParser
@@ -183,7 +184,10 @@ const BeancountParser = {
     const stockOpenPrice = R.head(historicalEntriesSortedByDate)?.open || 0;
     const stockClosePrice = R.last(historicalEntriesSortedByDate)?.close || 0;
 
-    return stockQuantity * (stockClosePrice - (config.onlyReturns ? stockOpenPrice : 0)) + dividendTotal;
+    const stockTotal = stockQuantity * (config.useOpenStockPrice ? stockOpenPrice : stockClosePrice)
+      - (config.onlyReturns ? stockOpenPrice : 0);
+
+    return stockTotal + dividendTotal;
   },
 }
 

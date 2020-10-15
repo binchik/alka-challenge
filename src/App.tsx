@@ -56,21 +56,24 @@ const App: React.FC = () => {
     }));
 
     const stockTotals = STOCK_SYMBOLS.flatMap(symbol => {
-      const [beginning, end] = upTos.map(upTo => ({
+      const [beginning, end] = upTos.map((upTo, idx) => ({
         total: BeancountParser.getSymbolTotal(beancount, historicalData, {
           symbol,
           upTo,
           includeDividends: true,
+          useOpenStockPrice: idx === 0,
         }),
         totalExDividends: BeancountParser.getSymbolTotal(beancount, historicalData, {
           symbol,
           upTo,
           includeDividends: false,
+          useOpenStockPrice: idx === 0,
         }),
         totalDividends: BeancountParser.getSymbolTotal(beancount, historicalData, {
           symbol,
           upTo,
           onlyDividends: true,
+          useOpenStockPrice: idx === 0,
         }),
       }));
 
