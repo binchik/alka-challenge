@@ -186,58 +186,6 @@ const BeancountParser = {
 
     return stockQuantity * (stockClosePrice - (config.onlyReturns ? stockOpenPrice : 0)) + dividendTotal;
   },
-  getReturns: (
-    beancount: Beancount,
-    historicalData: readonly HistoricalData[],
-    config: {
-      from: {month: number; year: number;};
-      to: {month: number; year: number;};
-    }
-  ): Returns => {
-    const transactionEntries = BeancountParser.getTransactionEntries(beancount);
-
-    const upToDateTransactions = transactionEntries.filter(entry => {
-      const date = BeancountParser.parseEntryDate(entry);
-
-      return (config.from.year >= date.year && config.from.month >= date.month) ||
-        (config.to.year <= date.year && config.to.month <= date.month);
-    });
-
-    const postings = upToDateTransactions.flatMap(transaction => transaction.postings);
-
-    const totalCash = R.sum(
-      postings
-        .filter(posting => BeancountParser.isUSDAccountName(posting.account))
-        .map(posting => posting.units.number || 0)
-    );
-
-    const symbolHistoricalEntries = historicalData
-      .filter(datum => datum.symbol)
-      .flatMap(datum => datum.historical);
-    const latestEntryCloseAmount = R.last(
-      R.sortBy(R.prop('date'), symbolHistoricalEntries)
-    )?.close || 0;
-
-    const stockPostings = postings.filter(BeancountParser.isStockPosting);
-
-    const stockPostingsBySymbol = R.groupBy(
-      posting => posting.units.currency,
-      stockPostings,
-    );
-    const stockReturnsBySymbol = R.mapObjIndexed(
-      postings => R.sum(postings.map(posting => posting.units.number * latestEntryCloseAmount)),
-      stockPostingsBySymbol,
-    );
-
-    const stocksInitialTotal = R.sum(Object.values(stockReturnsBySymbol));
-    const stockReturnsTotal = R.sum(Object.values(stockReturnsBySymbol));
-
-    return {
-      totalCash,
-      stockReturnsBySymbol,
-      stockReturnsTotal,
-    } 
-  },
 }
 
 export default BeancountParser;

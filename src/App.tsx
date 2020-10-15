@@ -1,25 +1,35 @@
 import * as R from 'ramda';
+import DatePicker from 'react-datepicker';
 import raw from "raw.macro";
 import React from 'react';
-
-import './App.css';
+import "react-datepicker/dist/react-datepicker.css";
 
 import BeancountConverterService, {Beancount} from './BeancountConverterService';
 import BeancountParser from './BeancountParser';
 import FinanceService, {HistoricalData} from './FinanceService';
 import InvestementsChart from './InvestementsChart';
+import './App.css';
 
 const beancountAsString = raw('./ibkr.bean');
 
 const STOCK_SYMBOLS = ['VTI', 'VXUS', 'BND'];
-const DATE_RANGE: [string, string] = ['2020-01-08', '2020-10-01'];
+
+const now = new Date();
+const DATE_RANGE: [string, string] = [
+  '2020-01-08',
+  `${now.getFullYear()}-${now.getMonth() + 1}-${now.getDate()}`,
+];
 
 const App: React.FC = () => {
   const [beancount, setBeancount] = React.useState<Beancount | null>(null);
   const [historicalData, setHistoricalData] = React.useState<readonly HistoricalData[] | null>(null);
+
   const [includeDividends, setIncludeDividends] = React.useState(false);
   const [onlyDividends, setOnlyDividends] = React.useState(false);
   const [onlyReturns, setOnlyReturns] = React.useState(false);
+
+  const [startDate, setStartDate] = React.useState(() => new Date('2020-01-08'));
+  const [endDate, setEndDate] = React.useState(() => new Date());
 
   React.useEffect(() => {
     const setUpDependencies = async () => {
@@ -40,7 +50,10 @@ const App: React.FC = () => {
       return null;
     }
 
-    const upTos = [{month: 1, year: 2020}, {month: 10, year: 2020}];
+    const upTos = [startDate, endDate].map(date => ({
+      month: date.getMonth() + 1,
+      year: date.getFullYear(),
+    }));
 
     const stockTotals = STOCK_SYMBOLS.flatMap(symbol => {
       const [beginning, end] = upTos.map(upTo => ({
@@ -68,15 +81,15 @@ const App: React.FC = () => {
       }
     });
 
-    const [beginningDate, endDate] = upTos;
+    const [upToBeginning, upToEnd] = upTos;
     const comissionTransactions = BeancountParser
       .getCommissionTransactions(beancount)
       .filter(
         transaction =>
-          (beginningDate.month <= transaction.date.month &&
-            beginningDate.year <= transaction.date.year) ||
-          (endDate.month >= transaction.date.month &&
-            beginningDate.year >= transaction.date.year)
+          (upToBeginning.month <= transaction.date.month &&
+            upToBeginning.year <= transaction.date.year) ||
+          (upToEnd.month >= transaction.date.month &&
+            upToEnd.year >= transaction.date.year)
       );
     const commissionsTotal = R.sum(
       comissionTransactions.map(transaction => transaction.comissionPosting.units.number)
@@ -98,7 +111,7 @@ const App: React.FC = () => {
       stockTotalExDividendsReturn,
       stockTotalDividendsOnlyReturn,
     };
-  }, [beancount, historicalData]);
+  }, [beancount, historicalData, startDate, endDate]);
 
   const handleChangeIncludeDividends: React.ChangeEventHandler<HTMLInputElement> = (
     event
@@ -119,51 +132,74 @@ const App: React.FC = () => {
   }
 
   return (
-    <div className="App">
-      <header>
-        {!onlyDividends && (
+    <div>
+      <article className="Chart">
+        <h1>Chart</h1>
+        <div>
+          {!onlyDividends && (
+            <label>
+              Include Dividends
+              <input
+                name="includeDividends"
+                type="checkbox"
+                checked={includeDividends}
+                onChange={handleChangeIncludeDividends}
+              />
+            </label>
+          )}
           <label>
-            Include Dividends
+            Only Dividends
             <input
-              name="includeDividends"
+              name="onlyDividends"
               type="checkbox"
-              checked={includeDividends}
-              onChange={handleChangeIncludeDividends}
+              checked={onlyDividends}
+              onChange={handleChangeOnlyDividends}
             />
           </label>
-        )}
-        <label>
-          Only Dividends
-          <input
-            name="onlyDividends"
-            type="checkbox"
-            checked={onlyDividends}
-            onChange={handleChangeOnlyDividends}
+          {!onlyDividends && (
+            <label>
+              Returns Per Month
+              <input
+                name="onlyReturns"
+                type="checkbox"
+                checked={onlyReturns}
+                onChange={handleChangeOnlyReturns}
+              />
+            </label>
+          )}
+        </div>
+        {beancount && (
+          <InvestementsChart
+            beancount={beancount}
+            historicalData={historicalData || []}
+            includeDividends={includeDividends}
+            onlyDividends={onlyDividends}
+            onlyReturns={onlyReturns}
           />
-        </label>
-        {!onlyDividends && (
-          <label>
-            Returns Per Month
-            <input
-              name="onlyReturns"
-              type="checkbox"
-              checked={onlyReturns}
-              onChange={handleChangeOnlyReturns}
-            />
-          </label>
         )}
-      </header>
-      {beancount && (
-        <InvestementsChart
-          beancount={beancount}
-          historicalData={historicalData || []}
-          includeDividends={includeDividends}
-          onlyDividends={onlyDividends}
-          onlyReturns={onlyReturns}
-        />
-      )}
+      </article>
       {returns && (
-        <>
+        <div className="Returns">
+          <h1>Returns for selected period</h1>
+          <DatePicker
+            selectsStart
+            minDate={new Date(DATE_RANGE[0])}
+            filterDate={date => date.getMonth() !== endDate.getMonth()}
+            selected={startDate}
+            startDate={startDate}
+            endDate={endDate}
+            onChange={setStartDate as any}
+          />
+          <DatePicker
+            selectsEnd
+            minDate={startDate}
+            maxDate={new Date(DATE_RANGE[1])}
+            filterDate={date => date.getMonth() !== startDate.getMonth()}
+            selected={endDate}
+            startDate={startDate}
+            endDate={endDate}
+            onChange={setEndDate as any}
+          />
           <article>
             <h2>Per share performance</h2>
             <table>
@@ -206,7 +242,7 @@ const App: React.FC = () => {
               </tbody>
             </table>
           </article>
-        </>
+        </div>
       )}
     </div>
   );

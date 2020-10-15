@@ -1,6 +1,13 @@
-.App {
-  text-align: center;
+body {
   padding: 4rem;
+}
+
+.Chart {
+  text-align: center;
+}
+
+.Returns {
+  margin: 2rem; 
 }
 
 header {
@@ -9,4 +16,15 @@ header {
 
 label {
   margin: 1rem;
+}
+
+.Returns table {
+  border: 1px solid black;
+}
+.Returns th {
+  border: 1px solid black;
+}
+.Returns td {
+  padding: 0.5rem;
+  border: 1px solid black;
 }
