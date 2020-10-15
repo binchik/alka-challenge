@@ -84,6 +84,7 @@ const App: React.FC = () => {
     const [upToBeginning, upToEnd] = upTos;
     const comissionAmounts = BeancountParser
       .getCommissionTransactions(beancount)
+      .filter(transaction => !transaction.dividendPosting)
       .filter(
         transaction =>
           (upToBeginning.month <= transaction.date.month &&
