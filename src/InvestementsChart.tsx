@@ -41,8 +41,6 @@ const InvestementsChart: React.FC<InvestementsChartProps> = ({
 
     const stockSymbols = R.uniq(historicalData.map(datum => datum.symbol));
 
-    const comissionTransactions = BeancountParser.getCommissionTransactions(beancount);
-
     const currentMonth = new Date().getMonth() + 1;
 
     const table = MONTHS
@@ -53,28 +51,39 @@ const InvestementsChart: React.FC<InvestementsChartProps> = ({
           return null;
         }
 
-        const priceWithoutNonDividendCommissions = R.sum(
-          stockSymbols.map(
-            symbol =>
-              BeancountParser.getSymbolTotal(beancount, historicalData, {
-                symbol,
-                onlyDividends,
-                includeDividends,
-                onlyReturns,
-                upTo: {month: monthIdx, year: 2020}
+        const upTo = {month: monthIdx, year: 2020};
+
+        const stockTotals = onlyDividends
+          ? []
+          : stockSymbols.map(stockSymbol =>
+              BeancountParser.getStockTotal(
+                beancount,
+                historicalData,
+                {
+                  upTo,
+                  symbol: stockSymbol,
+                  onlyReturns,
+                },
+              ),
+            );
+        const dividendTotals = includeDividends && !onlyDividends
+          ? []
+          : stockSymbols.map(stockSymbol =>
+              BeancountParser.getDividendTotal(beancount, {
+                upTo,
+                symbol: stockSymbol,
               }),
-          )
-        );
+            );
 
-        const nonDividendCommissionAmounts = comissionTransactions
-          .filter(transaction => monthIdx >= transaction.date.month)
-          .filter(transaction => !transaction.dividendPosting)
-          .map(transaction => transaction.comissionPosting.units.number);
-        const nonDividendCommissionTotal = onlyDividends
+        const stockTotal = R.sum(stockTotals);
+        const dividendTotal = R.sum(dividendTotals);
+        const cashTotal = onlyReturns
           ? 0
-          : R.sum(nonDividendCommissionAmounts);
+          : BeancountParser.getCashTotal(beancount, {upTo});
 
-        const price = priceWithoutNonDividendCommissions - nonDividendCommissionTotal;
+        const price = onlyDividends
+          ? dividendTotal
+          : (stockTotal + (onlyReturns ? dividendTotal : cashTotal - dividendTotal));
 
         return {
           Month: month,
