@@ -39,91 +39,37 @@ const InvestementsChart: React.FC<InvestementsChartProps> = ({
       return {};
     }
 
-    const historicalEntries = historicalData.flatMap(
-      historicalDatum =>
-        historicalDatum.historical.map(entry => ({
-          ...entry,
-          symbol: historicalDatum.symbol,
-        }),
-      ),
-    );
+    const stockSymbols = R.uniq(historicalData.map(datum => datum.symbol));
 
-    const historicalEntriesByMonth = R.groupBy(
-      entry => {
-        const [,month] = entry.date.split('-')
-
-        return String(Number(month));
-      },
-      historicalEntries,
-    );
-
-    const allStockTransactions = BeancountParser.getStockTransactions(beancount);
-    const allDividendTransactions = BeancountParser.getDividendTransactions(beancount);
-    const allComissionTransactions = BeancountParser.getCommissionTransactions(beancount);
+    const comissionTransactions = BeancountParser.getCommissionTransactions(beancount);
 
     const table = MONTHS
       .map((month, idx) => {
         const monthIdx = idx + 1;
 
-        const monthHistoricalEntries = historicalEntriesByMonth[monthIdx];
-
-        if (!monthHistoricalEntries) {
-          return null;
-        }
-
-        const monthHistoricalDataByStock = R.groupBy(R.prop('symbol'), monthHistoricalEntries);
-        const earliestMonthDataByStock = R.mapObjIndexed(
-          stockData => R.head(R.sortBy(R.prop('date'), stockData)),
-          monthHistoricalDataByStock,
-        );
-        const latestMonthDataByStock = R.mapObjIndexed(
-          stockData => R.last(R.sortBy(R.prop('date'), stockData)),
-          monthHistoricalDataByStock,
-        );
-
-        const monthAllStockTransactions = allStockTransactions.filter(
-          transaction => monthIdx >= transaction.date.month,
-        );
-        const monthAllDividendTransactions = allDividendTransactions.filter(
-          transaction => monthIdx >= transaction.date.month,
-        );
-        const monthAllCommissionTransactions = allComissionTransactions.filter(
-          transaction => monthIdx >= transaction.date.month,
-        );
-
-        const stockSymbols = Object.keys(latestMonthDataByStock);
-
-        const comissionTotal = onlyDividends
-          ? 0
-          : R.sum(
-              monthAllCommissionTransactions.map(transaction => transaction.comissionPosting.units.number)
-            );
-
         const price = R.sum(
-          stockSymbols.map(stockSymbol => {
-            const stockTransactions = monthAllStockTransactions.filter(
-              transaction => transaction.symbol === stockSymbol,
-            );
-            const dividedndTransactions = monthAllDividendTransactions.filter(
-              transaction => transaction.symbol === stockSymbol,
-            );
+          stockSymbols.map(
+            symbol => {
+              const totalWithoutCommissions = BeancountParser.getTotalWithoutCommissions(beancount, historicalData, {
+                symbol,
+                onlyDividends,
+                includeDividends,
+                onlyReturns,
+                upTo: {month: monthIdx, year: 2020}
+              })
 
-            const stockQuantity = onlyDividends
-              ? 0
-              : R.sum(
-                  stockTransactions.map(transaction => transaction.stockPosting.units.number)
-                );
-            const dividendTotal = onlyDividends || includeDividends
-              ? R.sum(
-                  dividedndTransactions.map(transaction => transaction.cashPosting.units.number)
-                )
-              : 0;
+              const monthCommissionTransactions = comissionTransactions.filter(
+                transaction => monthIdx >= transaction.date.month,
+              );
+              const comissionTotal = onlyDividends
+                ? 0
+                : R.sum(
+                    monthCommissionTransactions.map(transaction => transaction.comissionPosting.units.number)
+                  );
 
-            const stockOpenPrice = earliestMonthDataByStock[stockSymbol]?.open || 0;
-            const stockClosePrice = latestMonthDataByStock[stockSymbol]?.close || 0;
-
-            return stockQuantity * (stockClosePrice - (onlyReturns ? stockOpenPrice : 0)) + dividendTotal - comissionTotal;
-          })
+              return totalWithoutCommissions - comissionTotal;
+            },
+          )
         );
 
         return {

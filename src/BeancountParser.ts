@@ -1,6 +1,13 @@
 import * as R from 'ramda';
 
 import {Beancount, BeancountDirective, BeancountDirectivePosting} from "./BeancountConverterService";
+import { HistoricalData } from './FinanceService';
+
+export interface Returns {
+  totalCash: number;
+  stockReturnsBySymbol: Record<string, number>;
+  stockReturnsTotal: number;
+}
 
 const BeancountParser = {
   getTransactionEntries: (beancount: Beancount) => beancount.entries
@@ -28,11 +35,11 @@ const BeancountParser = {
       investmentType,
     };
   },
-  // isUSDAccountName: (accountName: string) => {
-  //   const {type, subType, stockSymbol} = BeancountParser.parseAccountName(accountName);
+  isUSDAccountName: (accountName: string) => {
+    const {type, subType, stockSymbol} = BeancountParser.parseAccountName(accountName);
 
-  //   return type === 'Assets' && subType === 'Investments' && stockSymbol === 'USD';
-  // },
+    return type === 'Assets' && subType === 'Investments' && stockSymbol === 'USD';
+  },
   isStockPosting: (posting: BeancountDirectivePosting) => {
     const {type, subType, stockSymbol} = BeancountParser.parseAccountName(posting.account);
     const acccountNameIsStockAccountName =
@@ -125,27 +132,111 @@ const BeancountParser = {
             comissionPosting,
           };
         }),
-  // getTotalsForPeriod: (beancount: Beancount, period: {month: number; year: number;}) => {
-  //   const transactionEntries = BeancountParser.getTransactionEntries(beancount);
+  getTotalWithoutCommissions: (
+    beancount: Beancount,
+    historicalData: readonly HistoricalData[],
+    config: {
+      symbol: string;
+      upTo: {month: number; year: number};
+      includeDividends?: boolean;
+      onlyDividends?: boolean;
+      onlyReturns?: boolean;
+    },
+  ) => {
+    const stockTransactions = BeancountParser
+      .getStockTransactions(beancount)
+      .filter(transaction => config.symbol === transaction.symbol)
+      .filter(transaction =>
+        config.upTo.month >= transaction.date.month &&
+        config.upTo.year >= transaction.date.year,
+      )
+    const stockQuantity = config.onlyDividends
+      ? 0
+      : R.sum(
+          stockTransactions.map(transaction => transaction.stockPosting.units.number)
+        );
 
-  //   const upToDateTransactions = transactionEntries.filter(entry => {
-  //     const date = BeancountParser.parseEntryDate(entry)
+    const dividendTransactions = BeancountParser
+      .getDividendTransactions(beancount)
+      .filter(transaction => config.symbol === transaction.symbol)
+      .filter(transaction =>
+        config.upTo.month >= transaction.date.month &&
+        config.upTo.year >= transaction.date.year,
+      );
+    const dividendTotal = config.onlyDividends || config.includeDividends
+      ? R.sum(
+          dividendTransactions.map(transaction => transaction.cashPosting.units.number)
+        )
+      : 0;
 
-  //     return period.year <= date.year && period.month <= date.month;
-  //   });
+    const historicalEntries = historicalData
+      .filter(historicalDatum => historicalDatum.symbol === config.symbol)
+      .flatMap(historicalDatum => historicalDatum.historical)
+      .filter(entry => {
+        const [year, month] = entry.date
+          .split('-')
+          .map(dateComponent => Number(dateComponent));
+  
+        return config.upTo.month === month && config.upTo.year === year;
+      });
+    const historicalEntriesSortedByDate = R.sortBy(R.prop('date'), historicalEntries);
+    const stockOpenPrice = R.head(historicalEntriesSortedByDate)?.open || 0;
+    const stockClosePrice = R.last(historicalEntriesSortedByDate)?.close || 0;
 
-  //   const postings = upToDateTransactions.flatMap(transaction => transaction.postings);
+    return stockQuantity * (stockClosePrice - (config.onlyReturns ? stockOpenPrice : 0)) + dividendTotal;
+  },
+  getReturns: (
+    beancount: Beancount,
+    historicalData: readonly HistoricalData[],
+    config: {
+      from: {month: number; year: number;};
+      to: {month: number; year: number;};
+    }
+  ): Returns => {
+    const transactionEntries = BeancountParser.getTransactionEntries(beancount);
 
-  //   const total = R.sum(
-  //     postings
-  //       .filter(BeancountParser.isUSDPosting)
-  //       .map(posting => posting.price?.number || 0)
-  //   );
+    const upToDateTransactions = transactionEntries.filter(entry => {
+      const date = BeancountParser.parseEntryDate(entry);
 
-  //   return {
-  //     total,
-  //   } 
-  // },
+      return (config.from.year >= date.year && config.from.month >= date.month) ||
+        (config.to.year <= date.year && config.to.month <= date.month);
+    });
+
+    const postings = upToDateTransactions.flatMap(transaction => transaction.postings);
+
+    const totalCash = R.sum(
+      postings
+        .filter(posting => BeancountParser.isUSDAccountName(posting.account))
+        .map(posting => posting.units.number || 0)
+    );
+
+    const symbolHistoricalEntries = historicalData
+      .filter(datum => datum.symbol)
+      .flatMap(datum => datum.historical);
+    const latestEntryCloseAmount = R.last(
+      R.sortBy(R.prop('date'), symbolHistoricalEntries)
+    )?.close || 0;
+
+    const stockPostings = postings.filter(BeancountParser.isStockPosting);
+
+    const stockPostingsBySymbol = R.groupBy(
+      posting => posting.units.currency,
+      stockPostings,
+    );
+    const stockReturnsBySymbol = R.mapObjIndexed(
+      postings => R.sum(postings.map(posting => posting.units.number * latestEntryCloseAmount)),
+      stockPostingsBySymbol,
+    );
+
+    const stocksInitialTotal = R.sum(Object.values(stockReturnsBySymbol));
+    const stockReturnsTotal = R.sum(Object.values(stockReturnsBySymbol));
+
+    return {
+      totalCash,
+      stockReturnsBySymbol,
+      stockReturnsTotal,
+    } 
+  },
 }
 
 export default BeancountParser;
