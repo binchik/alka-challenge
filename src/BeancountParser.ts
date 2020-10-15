@@ -35,11 +35,6 @@ const BeancountParser = {
       investmentType,
     };
   },
-  isUSDAccountName: (accountName: string) => {
-    const {type, subType, stockSymbol} = BeancountParser.parseAccountName(accountName);
-
-    return type === 'Assets' && subType === 'Investments' && stockSymbol === 'USD';
-  },
   isStockPosting: (posting: BeancountDirectivePosting) => {
     const {type, subType, stockSymbol} = BeancountParser.parseAccountName(posting.account);
     const acccountNameIsStockAccountName =

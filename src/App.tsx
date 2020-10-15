@@ -98,7 +98,6 @@ const App: React.FC = () => {
 
     const stockBeginningTotal = R.sum(stockTotals.map(stockTotal => stockTotal.beginning.total));
     const stockEndTotal = R.sum(stockTotals.map(stockTotal => stockTotal.end.total));
-
     const stockTotalReturn = (stockEndTotal - stockBeginningTotal - commissionsTotal) / stockBeginningTotal * 100;
 
     const stockBeginningTotalExDividends = R.sum(stockTotals.map(stockTotal => stockTotal.beginning.totalExDividends));
@@ -208,20 +207,27 @@ const App: React.FC = () => {
               <thead>
                 <tr>
                   <td>Symbol</td>
+                  <td>% Total</td>
                   <td>Total</td>
                   <td>Ex-Dividends</td>
                   <td>Dividends Only</td>
                 </tr>
               </thead>
               <tbody>
-                {returns.stockTotals.map(ret => (
-                  <tr key={ret.symbol}>
-                    <td>{ret.symbol}</td>
-                    <td>${(ret.end.total - ret.beginning.total).toFixed(2)}</td>
-                    <td>${(ret.end.totalExDividends - ret.beginning.totalExDividends).toFixed(2)}</td>
-                    <td>${(ret.end.totalDividends - ret.beginning.totalDividends).toFixed(2)}</td>
-                  </tr>
-                ))}
+                {returns.stockTotals.map(ret => {
+                  const totalsDiff = ret.end.total - ret.beginning.total;
+                  const totalROI = totalsDiff / ret.beginning.total * 100;
+
+                  return (
+                    <tr key={ret.symbol}>
+                      <td>{ret.symbol}</td>
+                      <td>%{totalROI.toFixed(2)}</td>
+                      <td>${totalsDiff.toFixed(2)}</td>
+                      <td>${(ret.end.totalExDividends - ret.beginning.totalExDividends).toFixed(2)}</td>
+                      <td>${(ret.end.totalDividends - ret.beginning.totalDividends).toFixed(2)}</td>
+                    </tr>
+                  );
+                })}
               </tbody>
             </table>
           </article>
