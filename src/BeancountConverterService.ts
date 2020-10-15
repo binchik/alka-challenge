@@ -16,7 +16,7 @@ export interface BeancountDirectivePosting {
   account: string;
   units: BeancountPrice;
   cost?: any;
-  price: BeancountPrice;
+  price?: BeancountPrice;
   flag?: any;
   meta: BeancountMeta;
 }
@@ -93,7 +93,7 @@ const BeancountConverterService = {
       },
     });
 
-    const json = await res.json()
+    const json = await res.json();
 
     return json;
   },
