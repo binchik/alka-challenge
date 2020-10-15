@@ -74,15 +74,17 @@ const App: React.FC = () => {
             onChange={handleChangeOnlyDividends}
           />
         </label>
-        <label>
-          Returns Per Month
-          <input
-            name="onlyReturns"
-            type="checkbox"
-            checked={onlyReturns}
-            onChange={handleChangeOnlyReturns}
-          />
-        </label>
+        {!onlyDividends && (
+          <label>
+            Returns Per Month
+            <input
+              name="onlyReturns"
+              type="checkbox"
+              checked={onlyReturns}
+              onChange={handleChangeOnlyReturns}
+            />
+          </label>
+        )}
       </header>
       {beancount && (
         <InvestementsChart

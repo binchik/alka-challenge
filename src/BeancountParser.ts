@@ -17,13 +17,6 @@ const BeancountParser = {
       day,
     };
   },
-  getAccountNames: (beancount: Beancount) => {
-    const transactionEntries = BeancountParser.getTransactionEntries(beancount);
-    const postings = transactionEntries.flatMap(entry => entry.postings);
-    const accountNames = R.uniq(postings.map(posting => posting.account));
-
-    return accountNames;
-  },
   parseAccountName: (accountName: string) => {
     const [type, subType, institutionName, stockSymbol, investmentType] = accountName.split(':');
 
@@ -35,11 +28,11 @@ const BeancountParser = {
       investmentType,
     };
   },
-  isUSDPosting: (posting: BeancountDirectivePosting) => {
-    const {type, subType, stockSymbol} = BeancountParser.parseAccountName(posting.account);
+  // isUSDAccountName: (accountName: string) => {
+  //   const {type, subType, stockSymbol} = BeancountParser.parseAccountName(accountName);
 
-    return type === 'Assets' && subType === 'Investments' && stockSymbol === 'USD';
-  },
+  //   return type === 'Assets' && subType === 'Investments' && stockSymbol === 'USD';
+  // },
   isStockPosting: (posting: BeancountDirectivePosting) => {
     const {type, subType, stockSymbol} = BeancountParser.parseAccountName(posting.account);
     const acccountNameIsStockAccountName =
@@ -132,27 +125,27 @@ const BeancountParser = {
             comissionPosting,
           };
         }),
-  getTotalsForPeriod: (beancount: Beancount, period: {month: number; year: number;}) => {
-    const transactionEntries = BeancountParser.getTransactionEntries(beancount);
+  // getTotalsForPeriod: (beancount: Beancount, period: {month: number; year: number;}) => {
+  //   const transactionEntries = BeancountParser.getTransactionEntries(beancount);
 
-    const upToDateTransactions = transactionEntries.filter(entry => {
-      const date = BeancountParser.parseEntryDate(entry)
+  //   const upToDateTransactions = transactionEntries.filter(entry => {
+  //     const date = BeancountParser.parseEntryDate(entry)
 
-      return period.year <= date.year && period.month <= date.month;
-    });
+  //     return period.year <= date.year && period.month <= date.month;
+  //   });
 
-    const postings = upToDateTransactions.flatMap(transaction => transaction.postings);
+  //   const postings = upToDateTransactions.flatMap(transaction => transaction.postings);
 
-    const total = R.sum(
-      postings
-        .filter(BeancountParser.isUSDPosting)
-        .map(posting => posting.price?.number || 0)
-    );
+  //   const total = R.sum(
+  //     postings
+  //       .filter(BeancountParser.isUSDPosting)
+  //       .map(posting => posting.price?.number || 0)
+  //   );
 
-    return {
-      total,
-    } 
-  },
+  //   return {
+  //     total,
+  //   } 
+  // },
 }
 
 export default BeancountParser;
